@@ -226,7 +226,6 @@
         let jenisTransaksi = 'Pemasukan';
         let dataTransaksi = [];
         
-        // Memastikan aplikasi hanya masuk ke mode simulasi jika URL benar-benar kosong atau bawaan template
         let isSimulationMode = WEB_APP_URL.trim() === "" || WEB_APP_URL.includes("URL_GOOGLE_APPS_SCRIPT_ANDA");
 
         document.getElementById('inputTanggal').valueAsDate = new Date();
@@ -431,43 +430,42 @@
             if (dataTransaksi.length === 0) return showMessage("Belum ada data untuk di-download.", "error");
 
             let dataSaring = dataTransaksi;
-// PERBAIKAN: Ubah tanggal menjadi format waktu baku (timestamp) untuk akurasi komparasi
-        const waktuMulai = new Date(mulai).setHours(0, 0, 0, 0);
-        const waktuSelesai = new Date(selesai).setHours(23, 59, 59, 999);
 
-        dataSaring = dataTransaksi.filter(item => {
-            const waktuItem = new Date(item.tanggal).getTime();
-            
-            // Jika tanggal valid, bandingkan angka waktunya
-            if (!isNaN(waktuItem)) {
-                return waktuItem >= waktuMulai && waktuItem <= waktuSelesai;
-            } else {
-                // Fallback jika format tetap gagal diparsing
-                return item.tanggal >= mulai && item.tanggal <= selesai;
+            // STRUKTUR IF SUDAH DIPERBAIKI DI SINI
+            if (mulai && selesai) {
+                const waktuMulai = new Date(mulai).setHours(0, 0, 0, 0);
+                const waktuSelesai = new Date(selesai).setHours(23, 59, 59, 999);
+
+                dataSaring = dataTransaksi.filter(item => {
+                    const waktuItem = new Date(item.tanggal).getTime();
+                    
+                    if (!isNaN(waktuItem)) {
+                        return waktuItem >= waktuMulai && waktuItem <= waktuSelesai;
+                    } else {
+                        return item.tanggal >= mulai && item.tanggal <= selesai;
+                    }
+                });
             }
-        });
-    }
 
-    if (dataSaring.length === 0) return showMessage("Tidak ada transaksi pada rentang tanggal tersebut.", "error");
+            if (dataSaring.length === 0) return showMessage("Tidak ada transaksi pada rentang tanggal tersebut.", "error");
 
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Tanggal,Keterangan,Jenis,Jumlah (Rp)\n";
-    
-    dataSaring.forEach(item => {
-        let ketAman = item.keterangan.replace(/,/g, " "); 
-        csvContent += `${item.tanggal},${ketAman},${item.jenis},${item.jumlah}\n`;
-    });
+            let csvContent = "data:text/csv;charset=utf-8,Tanggal,Keterangan,Jenis,Jumlah (Rp)\n";
+            
+            dataSaring.forEach(item => {
+                let ketAman = item.keterangan.replace(/,/g, " "); 
+                csvContent += `${item.tanggal},${ketAman},${item.jenis},${item.jumlah}\n`;
+            });
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Laporan_Kas_Masjid_${mulai||'Semua'}_sampai_${selesai||'Semua'}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    showMessage("Laporan CSV berhasil di-download.");
-}
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Laporan_Kas_Masjid_${mulai||'Semua'}_sampai_${selesai||'Semua'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showMessage("Laporan CSV berhasil di-download.");
+        }
 
         window.onload = muatData;
     </script>
